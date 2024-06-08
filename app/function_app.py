@@ -16,8 +16,10 @@ from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import VisualFeatureTypes
 from msrest.authentication import CognitiveServicesCredentials
 
-import requests
-import evaluator
+import numpy as np
+import string
+from gensim import downloader
+
 
 app = func.FunctionApp()
 
@@ -41,12 +43,58 @@ except KeyError as e:
     logging.error(f"Error: {e}")
     raise e
 
+wage_exponent = 5
+
+model = downloader.load("glove-wiki-gigaword-100")
+
+def remove_punctuation(s):
+    table = s.maketrans({key: None for key in string.punctuation})
+    return s.translate(table)
+
+
+def sum_cosine_similarities(keywords, evaluated):
+    result = 0.0
+    for keyword in keywords:
+        for word in evaluated:
+            try:
+                result += np.power(model.similarity(keyword, word), wage_exponent)
+                #result+=1.0
+            except KeyError:
+                pass
+    return result
+
+
+def evaluate_basing_on_every_words_cosine_similarity(data):
+    result = sum_cosine_similarities(data['Keywords'], data['Evaluated'])
+    return result / len(data['Evaluated']) 
+
+
+def evaluate(data):
+    try:
+        data['Evaluated'] = remove_punctuation(data['Evaluated']).split()
+        return evaluate_basing_on_every_words_cosine_similarity(data)    
+    except Exception as e:
+        raise Exception(f"{e}; Error in get_evaluate")
+
+
+def evaluation(json_input):
+    try:
+        body = json.loads(json_input)
+
+        result = evaluate(body)
+
+        return json.dumps(result)
+    except Exception as e:
+        raise Exception(f"{e}; Error in evaluation")
+    
 
 def get_evaluation(searched: str, evaluated: str):
-    request_data = json.dumps({"Evaluated": evaluated,'Keywords': searched,})
-    json_result = requests.get(connection_string, request_data)
-    evaluator.evaluation(request_data)
-    return json.loads(json_result)
+    try:
+        request_data = json.dumps({"Evaluated": evaluated,'Keywords': searched,})
+        json_result = evaluation(request_data)
+        return json.loads(json_result)
+    except Exception as e:
+        raise Exception(f"{e}; Error in get_evaluation; type of searched {type(searched)}; value of searhced {searched}")
 
 
 def generate_sas_token(image_name):
@@ -208,18 +256,18 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f"Connected to Azure Table Storage: {PHOTOS_TABLE_NAME}")
     
     highest_value = 0.0
-    searched = req.get_body()
+    searched = req.get_body().decode("utf-8")
     chosen_photo_idx = None
     try:
         for entity in table_client.list_entities():
             value = get_evaluation(searched, entity["Tags"])
             if value>highest_value:
                 highest_value=value
-                chosen_photo_idx = entity["Url"]
+                chosen_photo_idx = entity["RowKey"]
     except Exception as e:
         logging.error(f"Error: {e}")
         return func.HttpResponse(
-            "Error: Unable to read entities from Azure Table Storage", status_code=500
+            f"Error: Unable to read entities from Azure Table Storage; {e}", status_code=500
         )   
     if chosen_photo_idx is None:
         return func.HttpResponse(
@@ -230,14 +278,14 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
         )
     try:
         blob_client = blob_service_client.get_blob_client(
-            container=PHOTOS_CONTAINER_NAME, blob=chosen_photo_idx
+            container=PHOTOS_CONTAINER_NAME, blob=f"{chosen_photo_idx}.png"
         )
-        downloader = blob_client.download()
+        downloader = blob_client.download_blob()
         photo = downloader.readall()
     except Exception as e:
         logging.error(f"Error: {e}")
         return func.HttpResponse(
-            "Error: Unable to upload image to Azure Blob Storage", status_code=500
+            f"Error: Unable to download image from Azure Blob Storage; {e}; blob idx: {chosen_photo_idx}", status_code=500
         )
     return func.HttpResponse(
         photo,
