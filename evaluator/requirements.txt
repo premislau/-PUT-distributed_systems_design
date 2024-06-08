@@ -1,4 +1,0 @@
-azure-functions
-
-gensim==3.6.0
-numpy==1.16.2

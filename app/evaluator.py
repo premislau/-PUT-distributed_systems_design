@@ -11,8 +11,6 @@ import string
 from gensim import downloader
 import multiprocessing
 
-app = func.FunctionApp()
-
 wage_exponent = 5
 
 model = downloader.load("glove-wiki-gigaword-100")
@@ -43,9 +41,6 @@ def evaluate(data):
     return evaluate_basing_on_every_words_cosine_similarity(data)
 
 
-
-@app.function_name(name="evaluation")
-@app.route(route="evaluation", auth_level=func.AuthLevel.ANONYMOUS, methods=["GET"])
 def evaluation(req: func.HttpRequest) -> func.HttpResponse:
     try:
         body = req.get_body()

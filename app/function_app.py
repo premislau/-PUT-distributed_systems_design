@@ -17,6 +17,7 @@ from azure.cognitiveservices.vision.computervision.models import VisualFeatureTy
 from msrest.authentication import CognitiveServicesCredentials
 
 import requests
+import evaluator
 
 app = func.FunctionApp()
 
@@ -36,7 +37,6 @@ try:
     PHOTOS_CONNSTRING = os.environ["ENV_PHOTOS_CONNSTR"]
     CV_ENDPOINT = os.environ["ENV_COGNITIVE_URL"]
     CV_KEY = os.environ["ENV_COGNITIVE_KEY"]
-    EVALUATOR_URL = os.environ["ENV_EVALUATOR_URL"]
 except KeyError as e:
     logging.error(f"Error: {e}")
     raise e
@@ -44,8 +44,8 @@ except KeyError as e:
 
 def get_evaluation(searched: str, evaluated: str):
     request_data = json.dumps({"Evaluated": evaluated,'Keywords': searched,})
-    connection_string = EVALUATOR_URL+"/evaluation"
     json_result = requests.get(connection_string, request_data)
+    evaluator.evaluation(request_data)
     return json.loads(json_result)
 
 
