@@ -39,6 +39,7 @@ def evaluate_basing_on_every_words_cosine_similarity(data):
 
 
 def evaluate(data):
+    data['Keywords'] = remove_punctuation(data['Keywords']).split()
     data['Evaluated'] = remove_punctuation(data['Evaluated']).split()
     return evaluate_basing_on_every_words_cosine_similarity(data)
 

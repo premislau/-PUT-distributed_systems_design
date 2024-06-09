@@ -207,19 +207,19 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
 
     logging.info(f"Connected to Azure Table Storage: {PHOTOS_TABLE_NAME}")
     
-    highest_value = 0.0
-    searched = req.get_body()
+    highest_value = -1.0
+    searched = req.get_body().decode("utf-8")
     chosen_photo_idx = None
     try:
         for entity in table_client.list_entities():
             value = get_evaluation(searched, entity["Tags"])
             if value>highest_value:
                 highest_value=value
-                chosen_photo_idx = entity["Url"]
+                chosen_photo_idx = entity["RowKey"]
     except Exception as e:
         logging.error(f"Error: {e}")
         return func.HttpResponse(
-            "Error: Unable to read entities from Azure Table Storage", status_code=500
+            f"Error: Unable to read entities from Azure Table Storage", status_code=500
         )   
     if chosen_photo_idx is None:
         return func.HttpResponse(
@@ -230,14 +230,14 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
         )
     try:
         blob_client = blob_service_client.get_blob_client(
-            container=PHOTOS_CONTAINER_NAME, blob=chosen_photo_idx
+            container=PHOTOS_CONTAINER_NAME, blob=f"{chosen_photo_idx}.png"
         )
-        downloader = blob_client.download()
+        downloader = blob_client.download_blob()
         photo = downloader.readall()
     except Exception as e:
         logging.error(f"Error: {e}")
         return func.HttpResponse(
-            "Error: Unable to upload image to Azure Blob Storage", status_code=500
+            f"Error: Unable to download image from Azure Blob Storage", status_code=500
         )
     return func.HttpResponse(
         photo,
