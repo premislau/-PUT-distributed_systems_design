@@ -58,7 +58,6 @@ def sum_cosine_similarities(keywords, evaluated):
         for word in evaluated:
             try:
                 result += np.power(model.similarity(keyword, word), wage_exponent)
-                #result+=1.0
             except KeyError:
                 pass
     return result
@@ -70,32 +69,21 @@ def evaluate_basing_on_every_words_cosine_similarity(data):
 
 
 def evaluate(data):
-    try:
-        data['Evaluated'] = remove_punctuation(data['Evaluated']).split()
-        return evaluate_basing_on_every_words_cosine_similarity(data)    
-    except Exception as e:
-        raise Exception(f"{e}; Error in get_evaluate")
+    data['Keywords'] = remove_punctuation(data['Keywords']).split()
+    data['Evaluated'] = remove_punctuation(data['Evaluated']).split()
+    return evaluate_basing_on_every_words_cosine_similarity(data)
 
 
 def evaluation(json_input):
-    try:
-        body = json.loads(json_input)
-
-        result = evaluate(body)
-
-        return json.dumps(result)
-    except Exception as e:
-        raise Exception(f"{e}; Error in evaluation")
+    body = json.loads(json_input)
+    result = evaluate(body)
+    return json.dumps(result)
     
 
 def get_evaluation(searched: str, evaluated: str):
-    try:
-        request_data = json.dumps({"Evaluated": evaluated,'Keywords': searched,})
-        json_result = evaluation(request_data)
-        return json.loads(json_result)
-    except Exception as e:
-        raise Exception(f"{e}; Error in get_evaluation; type of searched {type(searched)}; value of searhced {searched}")
-
+    request_data = json.dumps({"Evaluated": evaluated,'Keywords': searched,})
+    json_result = evaluation(request_data)
+    return json.loads(json_result)
 
 def generate_sas_token(image_name):
     blob_service_client = BlobServiceClient.from_connection_string(PHOTOS_CONNSTRING)
@@ -255,7 +243,7 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
 
     logging.info(f"Connected to Azure Table Storage: {PHOTOS_TABLE_NAME}")
     
-    highest_value = 0.0
+    highest_value = -1.0
     searched = req.get_body().decode("utf-8")
     chosen_photo_idx = None
     try:
@@ -267,7 +255,7 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         logging.error(f"Error: {e}")
         return func.HttpResponse(
-            f"Error: Unable to read entities from Azure Table Storage; {e}", status_code=500
+            f"Error: Unable to read entities from Azure Table Storage", status_code=500
         )   
     if chosen_photo_idx is None:
         return func.HttpResponse(
@@ -285,7 +273,7 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         logging.error(f"Error: {e}")
         return func.HttpResponse(
-            f"Error: Unable to download image from Azure Blob Storage; {e}; blob idx: {chosen_photo_idx}", status_code=500
+            f"Error: Unable to download image from Azure Blob Storage", status_code=500
         )
     return func.HttpResponse(
         photo,
