@@ -1,15 +1,11 @@
 import azure.functions as func
-import datetime
 import json
 import logging
-import os
-import uuid
 
 import json
 import numpy as np
 import string
 from gensim import downloader
-import multiprocessing
 
 app = func.FunctionApp()
 
