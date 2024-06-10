@@ -2,7 +2,6 @@ import azure.functions as func
 import json
 import logging
 
-import json
 import numpy as np
 import string
 from gensim import downloader
@@ -45,17 +44,35 @@ def evaluate(data):
 @app.route(route="evaluation", auth_level=func.AuthLevel.ANONYMOUS, methods=["GET"])
 def evaluation(req: func.HttpRequest) -> func.HttpResponse:
     try:
-        body = req.get_body()
-    except Exception as e:
-        logging.error(f"Error: {e}")
+        body = req.get_json()
+    except ValueError as e:
+        logging.error(f"Error reading request body: {e}")
         return func.HttpResponse(
-            "Error: Unable to read the request body", status_code=400
+            json.dumps({"error": "Unable to read the request body"}),
+            status_code=400,
+            headers={"Content-Type": "application/json"}
         )
 
-    result = evaluate(body)
+    if 'Keywords' not in body or 'Evaluated' not in body:
+        logging.error("Invalid input: 'Keywords' or 'Evaluated' not found")
+        return func.HttpResponse(
+            json.dumps({"error": "Invalid input: 'Keywords' or 'Evaluated' not found"}),
+            status_code=400,
+            headers={"Content-Type": "application/json"}
+        )
+
+    try:
+        result = evaluate(body)
+    except Exception as e:
+        logging.error(f"Error during evaluation: {e}")
+        return func.HttpResponse(
+            json.dumps({"error": "Error during evaluation"}),
+            status_code=500,
+            headers={"Content-Type": "application/json"}
+        )
 
     return func.HttpResponse(
-        json.dumps(result),
+        json.dumps({"result": result}),
         status_code=200,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json"}
     )
