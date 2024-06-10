@@ -77,13 +77,14 @@ def evaluate(data):
 def evaluation(json_input):
     body = json.loads(json_input)
     result = evaluate(body)
-    return json.dumps(result)
+    return json.dumps({"Result": result})
     
 
 def get_evaluation(searched: str, evaluated: str):
     request_data = json.dumps({"Evaluated": evaluated,'Keywords': searched,})
     json_result = evaluation(request_data)
-    return json.loads(json_result)
+    result = float(json.loads(json_result)['Result'])
+    return result
 
 def generate_sas_token(image_name):
     blob_service_client = BlobServiceClient.from_connection_string(PHOTOS_CONNSTRING)
@@ -247,7 +248,14 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
     searched = req.get_body().decode("utf-8")
     chosen_photo_idx = None
     try:
-        for entity in table_client.list_entities():
+        entities = table_client.list_entities()
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        return func.HttpResponse(
+            f"Error: Unable to read entities from Azure Table Storage", status_code=500
+        ) 
+    try:
+        for entity in entities:
             value = get_evaluation(searched, entity["Tags"])
             if value>highest_value:
                 highest_value=value
@@ -255,8 +263,8 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         logging.error(f"Error: {e}")
         return func.HttpResponse(
-            f"Error: Unable to read entities from Azure Table Storage", status_code=500
-        )   
+            f"Error: Unable to get an evaluation; {e}", status_code=500
+        )    
     if chosen_photo_idx is None:
         return func.HttpResponse(
             "Error: No photo was matched", status_code=404
