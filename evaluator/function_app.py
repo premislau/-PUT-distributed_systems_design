@@ -10,7 +10,13 @@ app = func.FunctionApp()
 
 wage_exponent = 5
 
-model = downloader.load("glove-wiki-gigaword-100")
+model = None
+
+def get_model():
+    global model
+    if model is None:
+        model = downloader.load("glove-wiki-gigaword-100")
+    return model
 
 def remove_punctuation(s):
     table = s.maketrans({key: None for key in string.punctuation})
@@ -22,7 +28,7 @@ def sum_cosine_similarities(keywords, evaluated):
     for keyword in keywords:
         for word in evaluated:
             try:
-                result += np.power(model.similarity(keyword, word), wage_exponent)
+                result += np.power(get_model().similarity(keyword, word), wage_exponent)
             except KeyError:
                 pass
     return result
@@ -72,7 +78,7 @@ def evaluation(req: func.HttpRequest) -> func.HttpResponse:
         )
 
     return func.HttpResponse(
-        json.dumps({"result": result}),
+        json.dumps({"Evaluation": result}),
         status_code=200,
         headers={"Content-Type": "application/json"}
     )

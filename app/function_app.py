@@ -43,10 +43,10 @@ except KeyError as e:
 
 
 def get_evaluation(searched: str, evaluated: str):
-    request_data = json.dumps({"Evaluated": evaluated,'Keywords': searched,})
+    request_data = json.dumps({"Evaluated": evaluated,'Keywords': searched})
     connection_string = EVALUATOR_URL+"/evaluation"
-    json_result = requests.get(connection_string, request_data)
-    result = float(json.loads(json_result)['Result'])
+    json_result = requests.get(connection_string, data=request_data, headers={'Content-Type': 'application/json'}).json()
+    result = float(json_result['Evaluation'])
     return result
 
 
@@ -209,9 +209,15 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f"Connected to Azure Table Storage: {PHOTOS_TABLE_NAME}")
     
     highest_value = -1.0
-    searched = req.get_body().decode("utf-8")
+    searched = None
+    try:
+        searched = req.get_body().decode("utf-8")
+    except Exception as e:
+        return func.HttpResponse(
+            f"Error: Missing body in a request", status_code=400
+        )      
     chosen_photo_idx = None
-    entities
+    entities = None
     try:
         entities = table_client.list_entities()
     except Exception as e:
@@ -228,7 +234,7 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         logging.error(f"Error: {e}")
         return func.HttpResponse(
-            f"Error: Unable to get an evaluation", status_code=500
+            f"Error: Unable to get an evaluation; {str(e)}", status_code=500
         )   
     if chosen_photo_idx is None:
         return func.HttpResponse(
@@ -316,3 +322,22 @@ def process(msg: func.QueueMessage) -> None:
         raise e
 
     return None
+
+# @app.function_name(name="hello")
+# @app.route(route="hello", auth_level=func.AuthLevel.ANONYMOUS, methods=["GET"])
+# def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
+#     hello = ""
+#     try:
+#         connection_string = EVALUATOR_URL+"/hello"
+#         json_result = requests.get(connection_string)
+#         hello = json.loads(json_result)['Result']
+#     except Exception as e:
+#         return func.HttpResponse(
+#             f"Exception while getting hello: "+e, status_code=500
+#         )
+#     result = "Got this from evaluator: "+hello
+#     return func.HttpResponse(
+#         result,
+#         status_code=200,
+#         headers={"Content-Type": "application/json"},
+#     )

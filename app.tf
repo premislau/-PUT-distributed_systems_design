@@ -60,7 +60,7 @@ resource "azurerm_linux_function_app" "function_app" {
     "ENV_COGNITIVE_URL" = azurerm_cognitive_account.cognitive.endpoint
     "ENV_COGNITIVE_KEY" = azurerm_cognitive_account.cognitive.primary_access_key
 
-    "ENV_EVALUATOR_URL" = "https://${var.name}${var.environment}evaluator.azurewebsites.net/api/"
+    "ENV_EVALUATOR_URL" = "https://${var.name}${var.environment}evaluator.azurewebsites.net/api"
 
   }
 
