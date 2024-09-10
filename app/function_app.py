@@ -322,22 +322,3 @@ def process(msg: func.QueueMessage) -> None:
         raise e
 
     return None
-
-# @app.function_name(name="hello")
-# @app.route(route="hello", auth_level=func.AuthLevel.ANONYMOUS, methods=["GET"])
-# def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
-#     hello = ""
-#     try:
-#         connection_string = EVALUATOR_URL+"/hello"
-#         json_result = requests.get(connection_string)
-#         hello = json.loads(json_result)['Result']
-#     except Exception as e:
-#         return func.HttpResponse(
-#             f"Exception while getting hello: "+e, status_code=500
-#         )
-#     result = "Got this from evaluator: "+hello
-#     return func.HttpResponse(
-#         result,
-#         status_code=200,
-#         headers={"Content-Type": "application/json"},
-#     )
