@@ -66,9 +66,9 @@ def generate_sas_token(image_name):
     return f"{blob_client.url}?{token}"
 
 
-@app.function_name(name="post")
-@app.route(route="post", auth_level=func.AuthLevel.ANONYMOUS, methods=["POST"])
-def post(req: func.HttpRequest) -> func.HttpResponse:
+@app.function_name(name="new_photo")
+@app.route(route="new_photo", auth_level=func.AuthLevel.ANONYMOUS, methods=["POST"])
+def new_photo(req: func.HttpRequest) -> func.HttpResponse:
     """Post image from body to Azure Blob Storage and create an entry in Azure Table Storage"""
     try:
         table_service_client = TableServiceClient.from_connection_string(
@@ -155,9 +155,9 @@ def post(req: func.HttpRequest) -> func.HttpResponse:
     )
 
 
-@app.function_name(name="list")
-@app.route(route="list", auth_level=func.AuthLevel.ANONYMOUS, methods=["GET"])
-def list(req: func.HttpRequest) -> func.HttpResponse:
+@app.function_name(name="photos_list")
+@app.route(route="photos_list", auth_level=func.AuthLevel.ANONYMOUS, methods=["GET"])
+def photos_list(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Python HTTP trigger function processed a request.")
 
     try:

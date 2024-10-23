@@ -9,7 +9,7 @@ Upon deployment this project allows to post and store photos using infrastructur
 In following terminal listings ${var.name}${var.environment} should be substituted with adequate values from vars.tf
 ## Terraform
 ```powershell
-\PUT-distributed_systems_design> terraform init
+\PUT-distributed_systems_design> terraform apply
 ```
 ## Evaluator
 ```powershell
@@ -23,8 +23,8 @@ In following terminal listings ${var.name}${var.environment} should be substitut
 
 # Usage
 Upon deployment one can use following endpoints:
-- **POST** `https://${var.name}${var.environment}app.azurewebsites.net/api/post` – Posts a photo to the service.
+- **POST** `https://${var.name}${var.environment}app.azurewebsites.net/api/new_photo` – Posts a photo to the service.
 
-- **GET** `https://${var.name}${var.environment}app.azurewebsites.net/api/list` – Gets a list of information about stored photos.
+- **GET** `https://${var.name}${var.environment}app.azurewebsites.net/api/photos_list` – Gets a list of information about stored photos.
 
 - **GET** `https://${var.name}${var.environment}app.azurewebsites.net/api/matched_photo` – Gets a photo which was evaluated as best suiting for keywords provided as a body (in a form of plaintext).
