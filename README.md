@@ -8,17 +8,20 @@ Upon deployment this project allows to post and store photos using infrastructur
 
 In following terminal listings ${var.name}${var.environment} should be substituted with adequate values from vars.tf
 ## Terraform
+In \PUT-distributed_systems_design
 ```powershell
-\PUT-distributed_systems_design> terraform apply
+terraform apply
 ```
 ## Evaluator
+In \PUT-distributed_systems_design\evaluator
 ```powershell
-\PUT-distributed_systems_design\evaluator> func azure functionapp publish "${var.name}${var.environment}evaluator" --python
+func azure functionapp publish "${var.name}${var.environment}evaluator" --python
 ```
 
 ## Main app
+In \PUT-distributed_systems_design\app
 ```powershell
-\PUT-distributed_systems_design\app> func azure functionapp publish "${var.name}${var.environment}app" --python
+func azure functionapp publish "${var.name}${var.environment}app" --python
 ```
 
 # Usage
