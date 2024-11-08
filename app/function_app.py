@@ -43,9 +43,10 @@ except KeyError as e:
 
 
 def get_evaluation(searched: str, evaluated: str):
-    request_data = json.dumps({"Evaluated": evaluated,'Keywords': searched})
-    connection_string = EVALUATOR_URL+"/evaluation"
-    json_result = requests.get(connection_string, data=request_data, headers={'Content-Type': 'application/json'}).json()
+    keywords = ','.join(searched.split()) if isinstance(searched, str) else searched
+    connection_string = f"{EVALUATOR_URL}/evaluation?Keywords={keywords}&Evaluated={evaluated}"
+    
+    json_result = requests.get(connection_string, headers={'Content-Type': 'application/json'}).json()
     result = float(json_result['Evaluation'])
     return result
 
@@ -211,10 +212,10 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
     highest_value = -1.0
     searched = None
     try:
-        searched = req.get_body().decode("utf-8")
+        searched = req.params.get('Searched')
     except Exception as e:
         return func.HttpResponse(
-            f"Error: Missing body in a request", status_code=400
+            f"Error: Missing a 'Searched' parameter in a request; {e}", status_code=400
         )      
     chosen_photo_idx = None
     entities = None

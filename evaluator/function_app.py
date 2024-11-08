@@ -49,26 +49,28 @@ def evaluate(data):
 @app.function_name(name="evaluation")
 @app.route(route="evaluation", auth_level=func.AuthLevel.ANONYMOUS, methods=["GET"])
 def evaluation(req: func.HttpRequest) -> func.HttpResponse:
-    try:
-        body = req.get_json()
-    except ValueError as e:
-        logging.error(f"Error reading request body: {e}")
+    keywords = req.params.get('Keywords')
+    evaluated = req.params.get('Evaluated')
+
+    if not keywords:
+        logging.error("Error: Missing a 'Keywords' parameter in a request")
         return func.HttpResponse(
-            json.dumps({"error": "Unable to read the request body"}),
-            status_code=400,
-            headers={"Content-Type": "application/json"}
+            f"Error: Missing a 'Keywords' parameter in a request", status_code=400
         )
 
-    if 'Keywords' not in body or 'Evaluated' not in body:
-        logging.error("Invalid input: 'Keywords' or 'Evaluated' not found")
+    if not evaluated:
+        logging.error("Error: Missing an 'Evaluated' parameter in a request")
         return func.HttpResponse(
-            json.dumps({"error": "Invalid input: 'Keywords' or 'Evaluated' not found"}),
-            status_code=400,
-            headers={"Content-Type": "application/json"}
+            f"Error: Missing an 'Evaluated' parameter in a request", status_code=400
         )
+    
+    query = {
+        "Keywords": keywords,
+        "Evaluated": evaluated
+    }
 
     try:
-        result = evaluate(body)
+        result = evaluate(query)
     except Exception as e:
         logging.error(f"Error during evaluation: {e}")
         return func.HttpResponse(

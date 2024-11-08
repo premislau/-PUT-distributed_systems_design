@@ -30,4 +30,4 @@ Upon deployment one can use following endpoints:
 
 - **GET** `https://${var.name}${var.environment}app.azurewebsites.net/api/photos_list` – Gets a list of information about stored photos.
 
-- **GET** `https://${var.name}${var.environment}app.azurewebsites.net/api/matched_photo` – Gets a photo which was evaluated as best suiting for keywords provided as a body (in a form of plaintext).
+- **GET** `https://${var.name}${var.environment}app.azurewebsites.net/api/matched_photo?Searched={Searched}` – Gets a photo which was evaluated as best suiting for keywords provided as a "Searched" parameter.
