@@ -258,7 +258,7 @@ def matched_photo(req: func.HttpRequest) -> func.HttpResponse:
     return func.HttpResponse(
         photo,
         status_code=200,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "image/png"},
     )
 
 
